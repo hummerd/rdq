@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -60,6 +61,7 @@ type Redis interface {
 type RedisDelayedQueue struct {
 	opts      RDQOptions
 	pollTimer *time.Timer
+	wg        sync.WaitGroup
 }
 
 // AddAfter adds new delayed event to queue.
@@ -74,6 +76,9 @@ func (rdq *RedisDelayedQueue) Add(ctx context.Context, at time.Time, item []byte
 
 // Pop blocks until get event with appropriate time. Pop is not safe for concurrent use.
 func (rdq *RedisDelayedQueue) Pop(ctx context.Context) (time.Time, []byte, error) {
+	rdq.wg.Add(1)
+	defer rdq.wg.Done()
+
 	for {
 		s, d, err := rdq.opts.Redis.BZPOPMIN(ctx, rdq.opts.Queue, rdq.opts.PollInterval)
 		if err != nil {
@@ -117,4 +122,9 @@ func (rdq *RedisDelayedQueue) Pop(ctx context.Context) (time.Time, []byte, error
 
 		return tt, d, nil
 	}
+}
+
+// Stop waits until Pop stops it's processing.
+func (rdq *RedisDelayedQueue) Stop() {
+	rdq.wg.Wait()
 }

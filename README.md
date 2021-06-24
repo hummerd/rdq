@@ -7,8 +7,7 @@ RDQ is the queue of delayed events persisted in Redis written in GO.
 ```go
 import "github.com/gomodule/redigo/redis"
 
-func AddAndGet()
-{
+func AddAndGet() {
     rc, _ := redis.Dial("tcp", redisAddress)
 
     q := rdqredigo.NewRDQ(&rdq.RDQOptions{
@@ -27,8 +26,7 @@ func AddAndGet()
 ```go
 import "github.com/go-redis/redis/v8"
 
-func AddAndGet()
-{
+func AddAndGet() {
     c := redis.NewClient(&redis.Options{
         Addr: raddr,
     })
